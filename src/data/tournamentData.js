@@ -70,7 +70,8 @@ const STORAGE_KEY = 'fss18-picker-ball';
 // Ràng buộc sắp lịch:
 // 1) Mỗi vòng: 3 trận (3 sân), không cầu thủ nào xuất hiện ở 2 trận trong cùng vòng
 // 2) Không cầu thủ nào đánh 3 vòng liên tiếp
-// 3) 10 vòng tổng cộng (30 slot = 30 trận)
+// 3) Không được sử dụng sân 5 cho các trận bắt đầu trong khoảng 09:00–10:00
+// 4) Tổng số slot đủ để chơi 30 trận (có thể nhiều hơn 10 vòng để bù phần sân 5 bị khóa)
 const PAIR_PLAYERS = {
   pair1: ['chuLuc', 'tb1'],
   pair2: ['tb1', 'tb2'],
@@ -79,8 +80,30 @@ const PAIR_PLAYERS = {
   pair5: ['phongTrao', 'chuLuc'],
 };
 
-const TOTAL_ROUNDS = 10;
+const TOTAL_ROUNDS = 11;
 const COURTS_PER_ROUND = 3;
+
+// Cấu hình thời gian để ràng buộc slot theo giờ thực tế
+const SCHEDULE_CONFIG = {
+  startHour: 8,
+  startMinute: 0,
+  matchMinutes: 15,
+  breakMinutes: 3,
+};
+
+function getRoundStartMinutes(round) {
+  const base = SCHEDULE_CONFIG.startHour * 60 + SCHEDULE_CONFIG.startMinute;
+  const slot = SCHEDULE_CONFIG.matchMinutes + SCHEDULE_CONFIG.breakMinutes; // 18 phút/vòng
+  return base + round * slot;
+}
+
+// Sân 1 trong thuật toán tương ứng sân 5 thực tế khi hiển thị.
+// Khóa sân 5 cho các trận BẮT ĐẦU trong khoảng 09:00–10:00.
+function isCourtBlocked(round, court) {
+  if (court !== 1) return false;
+  const start = getRoundStartMinutes(round);
+  return start >= 9 * 60 && start < 10 * 60;
+}
 
 function buildSchedule(teams) {
   const teamIds = teams.map((t) => t.id);
@@ -101,7 +124,7 @@ function buildSchedule(teams) {
     }
   }
 
-  // Tạo 30 slot (10 vòng x 3 sân)
+  // Tạo các slot (TOTAL_ROUNDS x 3 sân). Một số slot có thể bị khóa (không gán trận).
   const slots = [];
   for (let round = 0; round < TOTAL_ROUNDS; round++) {
     for (let court = 1; court <= COURTS_PER_ROUND; court++) {
@@ -176,11 +199,17 @@ function buildSchedule(teams) {
 
   function backtrack(slotIndex) {
     if (slotIndex === slots.length) {
-      // gán hết 30 slot
+      // gán xong toàn bộ slot khả dụng
       return true;
     }
 
-    const { round } = slots[slotIndex];
+    const { round, court } = slots[slotIndex];
+
+    // Nếu slot này bị khóa (sân 5 trong khoảng 09:00–10:00) thì bỏ qua, không gán trận.
+    if (isCourtBlocked(round, court)) {
+      assignment[slotIndex] = null;
+      return backtrack(slotIndex + 1);
+    }
 
     // Tập người đã đánh trong round này (từ các slot trước trong cùng round)
     const roundPlayersSet = new Set();
@@ -221,7 +250,9 @@ function buildSchedule(teams) {
     for (let c = 0; c < COURTS_PER_ROUND; c++) {
       const slotIdx = r * COURTS_PER_ROUND + c;
       const gi = assignment[slotIdx];
+      if (gi == null) continue; // slot bị khóa (ví dụ: sân 5 trong khoảng 09:00–10:00)
       const game = games[gi];
+      if (!game) continue;
       roundsResult[r].push({
         ...game,
         round: r,

@@ -3,19 +3,23 @@ import { getAllScheduledGames, getPairMembers } from '../data/tournamentData';
 const SCHEDULE_CONFIG = {
   startHour: 8,
   startMinute: 0,
-  matchMinutes: 15,
-  breakMinutes: 3,
+  matchMinutes: 15, // thời gian thi đấu 1 trận
+  breakMinutes: 3, // nghỉ giữa các trận
+  totalRounds: 11, // 11 vòng để bù slot sân 5 bị khóa 9–10h
 };
 
 function getRoundTime(round) {
-  const totalMinutes = SCHEDULE_CONFIG.startHour * 60 + SCHEDULE_CONFIG.startMinute
-    + round * (SCHEDULE_CONFIG.matchMinutes + SCHEDULE_CONFIG.breakMinutes);
-  const startM = totalMinutes % 60;
-  const startH = Math.floor(totalMinutes / 60) % 24;
-  const endM = (totalMinutes + SCHEDULE_CONFIG.matchMinutes) % 60;
-  const endH = Math.floor((totalMinutes + SCHEDULE_CONFIG.matchMinutes) / 60) % 24;
+  const base = SCHEDULE_CONFIG.startHour * 60 + SCHEDULE_CONFIG.startMinute;
+  const slot = SCHEDULE_CONFIG.matchMinutes + SCHEDULE_CONFIG.breakMinutes; // 18 phút / vòng
+  const startTotal = base + round * slot;
+  const endTotal = startTotal + SCHEDULE_CONFIG.matchMinutes; // chỉ tính 15 phút thi đấu
   const pad = (n) => String(n).padStart(2, '0');
-  return `${pad(startH)}:${pad(startM)} - ${pad(endH)}:${pad(endM)}`;
+  const sh = Math.floor(startTotal / 60);
+  const sm = startTotal % 60;
+  const eh = Math.floor(endTotal / 60);
+  const em = endTotal % 60;
+  // Hiển thị khung giờ thi đấu (15') – nghỉ 3' đã tính trong khoảng giữa các vòng
+  return `${pad(sh)}:${pad(sm)} - ${pad(eh)}:${pad(em)}`;
 }
 
 function getTomorrowDate() {
@@ -50,7 +54,8 @@ export default function Schedule({ teams, matches }) {
     <div className="schedule-view">
       <h2>Lịch thi đấu</h2>
       <p className="subtitle schedule-date">
-        Dự kiến {getTomorrowDate()} lúc 08:00 • Sân 5, 6, 7 • Mỗi trận 15 phút, nghỉ giữa vòng 3 phút
+        Dự kiến {getTomorrowDate()} từ 08:00 • Sân 5, 6, 7 • 11 vòng, mỗi vòng 15 phút thi đấu + 3 phút nghỉ (sân 5
+        nghỉ 9–10h)
       </p>
 
       {rounds.map((round) => (

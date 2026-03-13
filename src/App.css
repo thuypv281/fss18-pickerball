@@ -280,6 +280,30 @@ body {
   color: var(--text-muted);
 }
 
+/* Admin inline score row */
+.admin-score-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .admin-score-row {
+    flex-wrap: wrap;
+  }
+}
+
+.score-inline-input {
+  width: 3rem;
+  padding: 0.25rem 0.35rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+}
+
 /* Overview */
 .overview-section {
   margin-top: 1.5rem;
@@ -489,115 +513,59 @@ body {
   gap: 0.5rem;
 }
 
-.game-btn {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
+.game-row {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
-  color: var(--text);
-  cursor: pointer;
-  font-size: 0.9rem;
-  text-align: left;
-  transition: all 0.2s;
+  padding: 0.5rem 0.75rem;
 }
 
-.game-btn:hover {
-  border-color: var(--accent-dim);
-  background: var(--bg-hover);
-}
-
-.game-btn.selected {
-  border-color: var(--accent);
-  background: rgba(0, 212, 170, 0.1);
-}
-
-.game-btn.completed {
+.game-row.completed {
   border-color: var(--accent-dim);
 }
 
-.game-btn .pair {
+.game-row-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.game-row-info {
+  flex: 1;
+}
+
+.game-row-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.game-row .pair {
   flex: 1;
   font-size: 0.8rem;
   color: var(--text-muted);
 }
 
-.game-btn .score {
-  font-weight: 600;
-  color: var(--accent);
+.game-row .pair-members {
+  display: block;
+  font-size: 0.8rem;
+  margin-top: 0.15rem;
+  color: var(--text);
 }
 
-/* Score form overlay */
-.score-form-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 1rem;
-}
-
-.score-form {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.5rem;
-  max-width: 400px;
-  width: 100%;
-}
-
-.score-form h3 {
-  margin: 0 0 0.5rem 0;
-}
-
-.score-form p {
-  margin: 0 0 1rem 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.score-inputs {
-  display: flex;
-  align-items: flex-end;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.score-inputs label {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.score-inputs label span {
+.score-inline-input {
+  width: 3rem;
+  padding: 0.25rem 0.35rem;
   font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.score-inputs input {
-  padding: 0.5rem;
-  font-size: 1rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--bg);
   color: var(--text);
 }
 
-.score-inputs .vs {
-  font-size: 1.25rem;
-  color: var(--text-muted);
-  padding-bottom: 0.25rem;
-}
-
-.form-actions {
-  display: flex;
-  gap: 0.5rem;
-}
+/* Score form overlay */
+/* (old score form overlay styles removed – inline editing used instead) */
 
 .btn-primary,
 .btn-secondary,
@@ -633,4 +601,34 @@ body {
 
 .admin-actions {
   margin-top: 1rem;
+}
+
+.score-form-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.score-form {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 100%;
+}
+
+.score-form h3 {
+  margin: 0 0 0.5rem 0;
+}
+
+.score-form p {
+  margin: 0 0 1rem 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }

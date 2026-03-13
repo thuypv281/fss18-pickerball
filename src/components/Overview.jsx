@@ -4,9 +4,9 @@ import { getAllScheduledGames } from '../data/tournamentData';
 const SCHEDULE_CONFIG = {
   startHour: 8,
   startMinute: 0,
-  matchMinutes: 15,
-  breakMinutes: 3,
-  totalRounds: 10,
+  matchMinutes: 15, // thời gian thi đấu 1 trận
+  breakMinutes: 3, // nghỉ giữa các trận
+  totalRounds: 11, // 11 vòng để bù slot sân 5 bị khóa 9–10h
 };
 
 const ROLE_LABELS = {
@@ -34,9 +34,9 @@ const TEAM_COLORS = {
 
 function getRoundTime(round) {
   const baseMin = SCHEDULE_CONFIG.startHour * 60 + SCHEDULE_CONFIG.startMinute;
-  const slot = SCHEDULE_CONFIG.matchMinutes + SCHEDULE_CONFIG.breakMinutes;
+  const slot = SCHEDULE_CONFIG.matchMinutes + SCHEDULE_CONFIG.breakMinutes; // 18 phút / vòng
   const startTotal = baseMin + round * slot;
-  const endTotal = startTotal + SCHEDULE_CONFIG.matchMinutes;
+  const endTotal = startTotal + SCHEDULE_CONFIG.matchMinutes; // chỉ tính 15 phút thi đấu
   const pad = (n) => String(n).padStart(2, '0');
   const sh = Math.floor(startTotal / 60);
   const sm = startTotal % 60;
@@ -101,7 +101,7 @@ export default function Overview({ teams, matches }) {
     <div className="overview-view">
       <h2>Thông tin giải & giờ thi đấu</h2>
       <p className="subtitle">
-        FSS18 - Giải picker ball • 4 team • 5 loại cặp • 10 vòng • 3 sân (5, 6, 7)
+        FSS18 - Giải picker ball • 4 team • 5 loại cặp • 11 vòng • 3 sân (5, 6, 7, sân 5 nghỉ 9–10h)
       </p>
 
       <section className="overview-section">
@@ -146,8 +146,8 @@ export default function Overview({ teams, matches }) {
       <section className="overview-section">
         <h3>Lịch thi đấu theo vòng (kèm giờ dự kiến)</h3>
         <p className="subtitle small">
-          Thời gian tính theo vòng: mỗi vòng 1 set 15 phút + 3 phút nghỉ. Sân 5, 6, 7 được
-          ánh xạ lần lượt từ Court 1, 2, 3.
+          Mỗi vòng 15 phút thi đấu + 3 phút nghỉ (18 phút/vòng), bắt đầu từ 08:00. Sân 5, 6,
+          7 được ánh xạ lần lượt từ Court 1, 2, 3.
         </p>
         {rounds.map(({ round, games: roundGames }) => (
           <div key={round} className="round-block">
