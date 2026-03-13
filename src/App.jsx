@@ -7,6 +7,7 @@ import {
 } from './data/tournamentData';
 import Schedule from './components/Schedule';
 import Rankings from './components/Rankings';
+import Overview from './components/Overview';
 import Admin from './components/Admin';
 import './App.css';
 
@@ -19,6 +20,13 @@ function App() {
   useEffect(() => {
     saveState(state);
   }, [state]);
+
+  const handleRefreshFromStorage = () => {
+    const saved = loadState();
+    if (saved) {
+      setState(saved);
+    }
+  };
 
   const handleUpdateScore = (matchId, gameIndex, team1Score, team2Score) => {
     setState((prev) => {
@@ -57,8 +65,16 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>
+        <h1 className="title-with-refresh">
           <Link to="/" className="logo-link">FSS18 - Giải picker ball</Link>
+          <button
+            type="button"
+            className="refresh-icon-btn"
+            onClick={handleRefreshFromStorage}
+            title="Refresh dữ liệu từ trình duyệt"
+          >
+            🔄
+          </button>
         </h1>
         <nav className="tabs">
           {!isAdmin ? (
@@ -74,6 +90,12 @@ function App() {
                 onClick={() => setTab('rankings')}
               >
                 Bảng xếp hạng
+              </button>
+              <button
+                className={tab === 'overview' ? 'active' : ''}
+                onClick={() => setTab('overview')}
+              >
+                Thông tin & giờ đấu
               </button>
             </>
           ) : (
@@ -92,7 +114,14 @@ function App() {
                   <Schedule teams={state.teams} matches={state.matches} />
                 )}
                 {tab === 'rankings' && (
-                  <Rankings teams={state.teams} matches={state.matches} />
+                  <Rankings
+                    teams={state.teams}
+                    matches={state.matches}
+                    onRefresh={handleRefreshFromStorage}
+                  />
+                )}
+                {tab === 'overview' && (
+                  <Overview teams={state.teams} matches={state.matches} />
                 )}
               </>
             }

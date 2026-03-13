@@ -48,6 +48,12 @@ body {
   color: var(--accent);
 }
 
+.title-with-refresh {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .tabs {
   display: flex;
   gap: 0.5rem;
@@ -102,6 +108,26 @@ body {
   text-decoration: underline;
 }
 
+.refresh-icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.2rem;
+  border-radius: 999px;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.refresh-icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+
 .main {
   flex: 1;
   padding: 1.5rem;
@@ -113,7 +139,8 @@ body {
 /* Schedule */
 .schedule-view h2,
 .rankings-view h2,
-.admin-view h2 {
+.admin-view h2,
+.overview-view h2 {
   margin: 0 0 0.25rem 0;
   font-size: 1.25rem;
 }
@@ -122,6 +149,12 @@ body {
   margin: 0 0 1.5rem 0;
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+.subtitle.small {
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
 }
 
 .round-block {
@@ -142,6 +175,13 @@ body {
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-muted);
+}
+
+.round-time-inline {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
 }
 
 .schedule-date {
@@ -238,6 +278,49 @@ body {
 .game-card .score-row .pending {
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+/* Overview */
+.overview-section {
+  margin-top: 1.5rem;
+}
+
+.overview-section h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.05rem;
+}
+
+.overview-table-wrapper {
+  overflow-x: auto;
+}
+
+.overview-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.overview-table th,
+.overview-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.overview-table th {
+  background: var(--bg-hover);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.overview-courts-row {
+  margin-top: 0.5rem;
+}
+
+.overview-game-card {
+  margin-bottom: 0.35rem;
 }
 
 /* Rankings */
@@ -536,6 +619,11 @@ body {
   background: var(--bg-hover);
   color: var(--text);
   border: 1px solid var(--border);
+}
+
+.btn-small {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
 }
 
 .btn-danger {

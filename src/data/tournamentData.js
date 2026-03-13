@@ -67,45 +67,214 @@ export const DEFAULT_TEAMS = [
 
 const STORAGE_KEY = 'fss18-picker-ball';
 
-// Sắp xếp: Chủ lực+Tb1 trên Sân 5. 10 vòng, cả 3 sân đều có trận mỗi vòng.
-// Rounds 0-5: pair1 Sân 5, pair2 Sân 6, pair3 Sân 7
-// Rounds 6-7: pair4 phân bổ Sân 5,6,7 | Rounds 8-9: pair5 phân bổ Sân 5,6,7
-function getGameSchedule(pairId, pairIdx) {
-  if (pairId === 'pair1') return { court: 1, round: pairIdx };
-  if (pairId === 'pair2') return { court: 2, round: pairIdx };
-  if (pairId === 'pair3') return { court: 3, round: pairIdx };
-  if (pairId === 'pair4') return { court: (pairIdx % 3) + 1, round: 6 + Math.floor(pairIdx / 3) };
-  if (pairId === 'pair5') return { court: (pairIdx % 3) + 1, round: 8 + Math.floor(pairIdx / 3) };
-  return { court: 1, round: 0 };
-}
+// Ràng buộc sắp lịch:
+// 1) Mỗi vòng: 3 trận (3 sân), không cầu thủ nào xuất hiện ở 2 trận trong cùng vòng
+// 2) Không cầu thủ nào đánh 3 vòng liên tiếp
+// 3) 10 vòng tổng cộng (30 slot = 30 trận)
+const PAIR_PLAYERS = {
+  pair1: ['chuLuc', 'tb1'],
+  pair2: ['tb1', 'tb2'],
+  pair3: ['tb2', 'nu'],
+  pair4: ['nu', 'phongTrao'],
+  pair5: ['phongTrao', 'chuLuc'],
+};
 
-export function getTeamMatches(teams) {
-  const matches = [];
-  const gamesByPair = { pair1: 0, pair2: 0, pair3: 0, pair4: 0, pair5: 0 };
-  for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      const games = PAIR_TYPES.map((pair) => {
-        const pairIdx = gamesByPair[pair.id];
-        gamesByPair[pair.id]++;
-        const { court, round } = getGameSchedule(pair.id, pairIdx);
-        return {
+const TOTAL_ROUNDS = 10;
+const COURTS_PER_ROUND = 3;
+
+function buildSchedule(teams) {
+  const teamIds = teams.map((t) => t.id);
+
+  // Tạo danh sách tất cả trận (6 cặp đội x 5 loại pair = 30)
+  const games = [];
+  for (let i = 0; i < teamIds.length; i++) {
+    for (let j = i + 1; j < teamIds.length; j++) {
+      const team1Id = teamIds[i];
+      const team2Id = teamIds[j];
+      PAIR_TYPES.forEach((pair) => {
+        games.push({
+          team1Id,
+          team2Id,
           pairId: pair.id,
-          pairLabel: pair.label,
-          team1Score: null,
-          team2Score: null,
-          court,
-          round,
-        };
-      });
-      matches.push({
-        id: `match-${teams[i].id}-${teams[j].id}`,
-        team1Id: teams[i].id,
-        team2Id: teams[j].id,
-        games,
+        });
       });
     }
   }
-  return matches;
+
+  // Tạo 30 slot (10 vòng x 3 sân)
+  const slots = [];
+  for (let round = 0; round < TOTAL_ROUNDS; round++) {
+    for (let court = 1; court <= COURTS_PER_ROUND; court++) {
+      slots.push({ round, court });
+    }
+  }
+
+  // Cấu trúc trạng thái cho backtracking
+  const assigned = new Array(games.length).fill(false);
+  const playerRounds = {}; // playerKey -> array các vòng đã đánh (theo thứ tự)
+
+  function getPlayersInGame(game) {
+    const res = [];
+    const roles = PAIR_PLAYERS[game.pairId];
+    roles.forEach((role) => {
+      res.push(`${game.team1Id}:${role}`);
+      res.push(`${game.team2Id}:${role}`);
+    });
+    return res;
+  }
+
+  // Kiểm tra ràng buộc cho 1 game tại slot (round)
+  function canPlaceGameAt(gameIndex, round, roundPlayersSet) {
+    const game = games[gameIndex];
+    const players = getPlayersInGame(game);
+
+    // Ràng buộc 1: không trùng người trong cùng vòng
+    for (const p of players) {
+      if (roundPlayersSet.has(p)) return false;
+    }
+
+    // Ràng buộc 2: không 3 vòng liên tiếp cho cùng người
+    for (const p of players) {
+      const arr = playerRounds[p] || [];
+      const last = arr[arr.length - 1];
+      const secondLast = arr[arr.length - 2];
+      if (last === round - 1 && secondLast === round - 2) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  function placeGame(gameIndex, round) {
+    assigned[gameIndex] = true;
+    const game = games[gameIndex];
+    const players = getPlayersInGame(game);
+    players.forEach((p) => {
+      const arr = playerRounds[p] || [];
+      playerRounds[p] = [...arr, round];
+    });
+  }
+
+  function removeGame(gameIndex) {
+    assigned[gameIndex] = false;
+    const game = games[gameIndex];
+    const players = getPlayersInGame(game);
+    players.forEach((p) => {
+      const arr = playerRounds[p];
+      if (!arr) return;
+      arr.pop();
+      if (arr.length === 0) {
+        delete playerRounds[p];
+      } else {
+        playerRounds[p] = arr;
+      }
+    });
+  }
+
+  const assignment = new Array(slots.length).fill(null); // index game cho mỗi slot
+
+  function backtrack(slotIndex) {
+    if (slotIndex === slots.length) {
+      // gán hết 30 slot
+      return true;
+    }
+
+    const { round } = slots[slotIndex];
+
+    // Tập người đã đánh trong round này (từ các slot trước trong cùng round)
+    const roundPlayersSet = new Set();
+    for (let i = round * COURTS_PER_ROUND; i < slotIndex; i++) {
+      const gi = assignment[i];
+      if (gi == null) continue;
+      getPlayersInGame(games[gi]).forEach((p) => roundPlayersSet.add(p));
+    }
+
+    // Heuristic: ưu tiên những game chưa gán có nhiều ràng buộc (ở đây đơn giản là theo thứ tự)
+    for (let gi = 0; gi < games.length; gi++) {
+      if (assigned[gi]) continue;
+      if (!canPlaceGameAt(gi, round, roundPlayersSet)) continue;
+
+      assignment[slotIndex] = gi;
+      placeGame(gi, round);
+
+      if (backtrack(slotIndex + 1)) return true;
+
+      removeGame(gi);
+      assignment[slotIndex] = null;
+    }
+
+    return false;
+  }
+
+  const ok = backtrack(0);
+  if (!ok) {
+    // Nếu không tìm được lịch thỏa ràng buộc, fallback: trả về lịch rỗng để dễ debug
+    // (UI vẫn chạy, chỉ không có trận)
+    return [];
+  }
+
+  // Chuyển assignment -> danh sách rounds với thông tin trận + sân
+  const roundsResult = [];
+  for (let r = 0; r < TOTAL_ROUNDS; r++) {
+    roundsResult[r] = [];
+    for (let c = 0; c < COURTS_PER_ROUND; c++) {
+      const slotIdx = r * COURTS_PER_ROUND + c;
+      const gi = assignment[slotIdx];
+      const game = games[gi];
+      roundsResult[r].push({
+        ...game,
+        round: r,
+        court: c + 1,
+      });
+    }
+  }
+
+  return roundsResult;
+}
+
+export function getTeamMatches(teams) {
+  const rounds = buildSchedule(teams);
+  const matchMap = {};
+
+  // Khởi tạo matchMap cho 6 cặp đội
+  teams.forEach((t, i) => {
+    for (let j = i + 1; j < teams.length; j++) {
+      const other = teams[j];
+      const key = `${t.id}-${other.id}`;
+      matchMap[key] = {
+        id: `match-${t.id}-${other.id}`,
+        team1Id: t.id,
+        team2Id: other.id,
+        games: [],
+      };
+    }
+  });
+
+  // Gán các game theo rounds vào matchMap
+  rounds.forEach((roundGames, roundIdx) => {
+    roundGames.forEach((g) => {
+      const key = g.team1Id < g.team2Id ? `${g.team1Id}-${g.team2Id}` : `${g.team2Id}-${g.team1Id}`;
+      const match = matchMap[key];
+      if (!match) return;
+      const pair = PAIR_TYPES.find((p) => p.id === g.pairId);
+      match.games.push({
+        pairId: g.pairId,
+        pairLabel: pair?.label || '',
+        team1Score: null,
+        team2Score: null,
+        court: g.court,
+        round: roundIdx,
+      });
+    });
+  });
+
+  return Object.values(matchMap).map((m) => ({
+    id: m.id,
+    team1Id: m.team1Id,
+    team2Id: m.team2Id,
+    games: m.games.sort((a, b) => (a.round !== b.round ? a.round - b.round : a.court - b.court)),
+  }));
 }
 
 export function getInitialState() {
