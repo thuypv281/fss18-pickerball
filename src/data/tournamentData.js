@@ -67,6 +67,9 @@ export const DEFAULT_TEAMS = [
 
 const STORAGE_KEY = 'fss18-picker-ball';
 
+// Tăng version mỗi khi đổi cấu trúc lịch (số vòng, ràng buộc sân, ...) để bỏ qua data cũ trong localStorage
+const STATE_VERSION = 2;
+
 // Ràng buộc sắp lịch:
 // 1) Mỗi vòng: 3 trận (3 sân), không cầu thủ nào xuất hiện ở 2 trận trong cùng vòng
 // 2) Không cầu thủ nào đánh 3 vòng liên tiếp
@@ -342,6 +345,8 @@ export function loadState() {
     if (!raw) return null;
     const data = JSON.parse(raw);
     if (!data.teams || !data.matches) return null;
+    // Bỏ qua data lưu từ bản cũ (lịch khác: 10 vòng, sân 5 có 9–10h, ...)
+    if (data.stateVersion !== STATE_VERSION) return null;
     // Migrate: sync team names from DEFAULT_TEAMS (chỉ khi còn tên cũ "Đội 1"...) và thêm members nếu thiếu
     const OLD_NAMES = ['Đội 1', 'Đội 2', 'Đội 3', 'Đội 4'];
     data.teams = data.teams.map((t) => {
@@ -354,7 +359,7 @@ export function loadState() {
         members: t.members || def.members,
       };
     });
-    return data;
+    return { teams: data.teams, matches: data.matches };
   } catch {
     return null;
   }
@@ -362,7 +367,10 @@ export function loadState() {
 
 export function saveState(state) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...state, stateVersion: STATE_VERSION })
+    );
   } catch (e) {
     console.error('Save failed:', e);
   }
