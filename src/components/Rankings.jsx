@@ -1,5 +1,12 @@
 import { calculateRankings } from '../data/tournamentData';
 
+const TEAM_COLORS = {
+  team1: 'team-color-1',
+  team2: 'team-color-2',
+  team3: 'team-color-3',
+  team4: 'team-color-4',
+};
+
 export default function Rankings({ teams, matches }) {
   const rankings = calculateRankings(teams, matches);
 
@@ -12,7 +19,7 @@ export default function Rankings({ teams, matches }) {
           <thead>
             <tr>
               <th>Hạng</th>
-              <th>Đội</th>
+              <th>Team</th>
               <th>Thắng</th>
               <th>Thua</th>
               <th>Set thắng</th>
@@ -23,10 +30,14 @@ export default function Rankings({ teams, matches }) {
             </tr>
           </thead>
           <tbody>
-            {rankings.map((r, i) => (
+            {rankings.map((r, i) => {
+              const rankIcon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
+              return (
               <tr key={r.teamId} className={i < 3 ? `top-${i + 1}` : ''}>
-                <td className="rank">{i + 1}</td>
-                <td className="team-name">{r.teamName}</td>
+                <td className={`rank ${i >= 3 ? 'rank-number' : ''}`}>
+                  {rankIcon ? <span className="rank-icon">{rankIcon}</span> : i + 1}
+                </td>
+                <td className="team-name"><span className={TEAM_COLORS[r.teamId] || 'team-color-1'}>{r.teamName}</span></td>
                 <td>{r.matchWins}</td>
                 <td>{r.matchLosses}</td>
                 <td>{r.setWins}</td>
@@ -38,7 +49,8 @@ export default function Rankings({ teams, matches }) {
                   {r.pointsFor - r.pointsAgainst}
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>

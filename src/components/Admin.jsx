@@ -45,7 +45,7 @@ export default function Admin({ teams, matches, onUpdateScore, onReset, onRename
         <div className="team-names-grid">
           {teams.map((t) => (
             <label key={t.id} className="team-name-edit">
-              <span>{t.id.replace('team', 'Đội ')}</span>
+              <span>{t.name || t.id.replace('team', 'Đội ')}</span>
               <input
                 type="text"
                 value={t.name}

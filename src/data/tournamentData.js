@@ -2,36 +2,99 @@
 // 4 teams, 5 pair types, round robin, 3 courts
 
 export const PAIR_TYPES = [
-  { id: 'pair1', label: 'Chủ lực + Tb1' },
-  { id: 'pair2', label: 'Tb1 + Tb2' },
-  { id: 'pair3', label: 'Tb2 + Nữ' },
-  { id: 'pair4', label: 'Nữ + Phong trào' },
-  { id: 'pair5', label: 'Phong trào + Chủ lực' },
+  { id: 'pair1', label: 'Chủ lực + Tb1', memberKeys: ['chuLuc', 'tb1'] },
+  { id: 'pair2', label: 'Tb1 + Tb2', memberKeys: ['tb1', 'tb2'] },
+  { id: 'pair3', label: 'Tb2 + Nữ', memberKeys: ['tb2', 'nu'] },
+  { id: 'pair4', label: 'Nữ + Phong trào', memberKeys: ['nu', 'phongTrao'] },
+  { id: 'pair5', label: 'Phong trào + Chủ lực', memberKeys: ['phongTrao', 'chuLuc'] },
 ];
 
+export function getPairMembers(team, pairId) {
+  return PAIR_TYPES.find((p) => p.id === pairId)?.memberKeys
+    .map((k) => team.members?.[k] || '')
+    .filter(Boolean)
+    .join(' + ') || null;
+}
+
+export const MEMBER_KEYS = ['chuLuc', 'tb1', 'tb2', 'phongTrao', 'nu'];
+
 export const DEFAULT_TEAMS = [
-  { id: 'team1', name: 'Đội 1' },
-  { id: 'team2', name: 'Đội 2' },
-  { id: 'team3', name: 'Đội 3' },
-  { id: 'team4', name: 'Đội 4' },
+  {
+    id: 'team1',
+    name: 'Team Thùy',
+    members: {
+      chuLuc: 'Vũ Giáp Gianh',
+      tb1: 'Lê Đức Mạnh',
+      tb2: 'Nguyễn Đức Nam',
+      phongTrao: 'Nguyễn Thành Nam',
+      nu: 'Bì Bọt',
+    },
+  },
+  {
+    id: 'team2',
+    name: 'Team Âu',
+    members: {
+      chuLuc: 'Lục Đình Vinh',
+      tb1: 'Tiến Võ',
+      tb2: 'Xuân Trường',
+      phongTrao: 'Lộc RnD',
+      nu: 'Âu Nguyễn',
+    },
+  },
+  {
+    id: 'team3',
+    name: 'Team Hồng Linh',
+    members: {
+      chuLuc: 'Phùng Văn Thủy',
+      tb1: 'Hải Long',
+      tb2: 'Quang Tuấn',
+      phongTrao: 'Lại Hữu Dương',
+      nu: 'Hồng Linh',
+    },
+  },
+  {
+    id: 'team4',
+    name: 'Team Cartherine',
+    members: {
+      chuLuc: 'Vũ Xuân Hạc',
+      tb1: 'Trần Tuấn Minh',
+      tb2: 'Ngô Xuân Giang',
+      phongTrao: 'Phan Minh Thông',
+      nu: 'Cartherine',
+    },
+  },
 ];
 
 const STORAGE_KEY = 'fss18-picker-ball';
 
+// Sắp xếp theo loại cặp: Chủ lực+Tb1 thi đấu trên cùng một sân (Sân 1)
+// Rounds 0-5: pair1 Sân 1, pair2 Sân 2, pair3 Sân 3
+// Rounds 6-11: pair4 Sân 1, pair5 Sân 2 (Sân 3 trống)
+const PAIR_SCHEDULE = {
+  pair1: { court: 1, roundOffset: 0 },
+  pair2: { court: 2, roundOffset: 0 },
+  pair3: { court: 3, roundOffset: 0 },
+  pair4: { court: 1, roundOffset: 6 },
+  pair5: { court: 2, roundOffset: 6 },
+};
+
 export function getTeamMatches(teams) {
   const matches = [];
-  let gameCounter = 0;
+  const gamesByPair = { pair1: 0, pair2: 0, pair3: 0, pair4: 0, pair5: 0 };
   for (let i = 0; i < teams.length; i++) {
     for (let j = i + 1; j < teams.length; j++) {
-      const games = PAIR_TYPES.map((pair, idx) => {
-        const globalIdx = gameCounter++;
+      const games = PAIR_TYPES.map((pair) => {
+        const pairIdx = gamesByPair[pair.id];
+        gamesByPair[pair.id]++;
+        const { court, roundOffset } = PAIR_SCHEDULE[pair.id];
+        const round = roundOffset + pairIdx;
         return {
           pairId: pair.id,
           pairLabel: pair.label,
           team1Score: null,
           team2Score: null,
-          court: (globalIdx % 3) + 1,
-          round: Math.floor(globalIdx / 3),
+          court,
+          round,
         };
       });
       matches.push({
@@ -79,6 +142,18 @@ export function loadState() {
     if (!raw) return null;
     const data = JSON.parse(raw);
     if (!data.teams || !data.matches) return null;
+    // Migrate: sync team names from DEFAULT_TEAMS (chỉ khi còn tên cũ "Đội 1"...) và thêm members nếu thiếu
+    const OLD_NAMES = ['Đội 1', 'Đội 2', 'Đội 3', 'Đội 4'];
+    data.teams = data.teams.map((t) => {
+      const def = DEFAULT_TEAMS.find((d) => d.id === t.id);
+      if (!def) return t;
+      const needsNameUpdate = OLD_NAMES.includes(t.name);
+      return {
+        ...t,
+        name: needsNameUpdate ? def.name : t.name,
+        members: t.members || def.members,
+      };
+    });
     return data;
   } catch {
     return null;

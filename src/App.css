@@ -191,9 +191,43 @@ body {
   margin-bottom: 0.25rem;
 }
 
-.game-card .teams {
+.game-card .teams.members-row {
   font-size: 0.9rem;
   margin-bottom: 0.25rem;
+}
+
+/* Màu cố định theo team: Thùy, Âu, Hồng Linh, Cartherine */
+.team-color-1,
+.game-card .members.team-color-1,
+.court-label .team-color-1 {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.team-color-2,
+.game-card .members.team-color-2,
+.court-label .team-color-2 {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.team-color-3,
+.game-card .members.team-color-3,
+.court-label .team-color-3 {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.team-color-4,
+.game-card .members.team-color-4,
+.court-label .team-color-4 {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.game-card .members-vs {
+  color: var(--text-muted);
+  margin: 0 0.25rem;
 }
 
 .game-card .score-row .score {
@@ -236,24 +270,55 @@ body {
 
 .rankings-table td.rank {
   font-weight: 700;
-  width: 3rem;
+  width: 3.5rem;
 }
 
-.rankings-table tr.top-1 .rank {
-  color: var(--gold);
+.rankings-table .rank-icon {
+  font-size: 2rem;
+  line-height: 1;
+  display: inline-block;
 }
 
-.rankings-table tr.top-2 .rank {
-  color: var(--silver);
+.rankings-table td.rank.rank-number {
+  text-align: center;
 }
 
-.rankings-table tr.top-3 .rank {
-  color: var(--bronze);
+.rankings-table tr.top-1 {
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.rankings-table tr.top-1 .rank,
+.rankings-table tr.top-1 .rank-icon {
+  color: #4ade80;
+}
+
+.rankings-table tr.top-2 {
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.rankings-table tr.top-2 .rank,
+.rankings-table tr.top-2 .rank-icon {
+  color: #60a5fa;
+}
+
+.rankings-table tr.top-3 {
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.rankings-table tr.top-3 .rank,
+.rankings-table tr.top-3 .rank-icon {
+  color: #fbbf24;
 }
 
 .rankings-table td.team-name {
   font-weight: 600;
 }
+
+/* Màu team name theo team ID - đồng bộ với lịch thi đấu */
+.rankings-table .team-name .team-color-1 { color: #4ade80; }
+.rankings-table .team-name .team-color-2 { color: #60a5fa; }
+.rankings-table .team-name .team-color-3 { color: #fbbf24; }
+.rankings-table .team-name .team-color-4 { color: #f472b6; }
 
 .rankings-table td.positive {
   color: var(--accent);
