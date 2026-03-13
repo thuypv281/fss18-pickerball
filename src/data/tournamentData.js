@@ -67,16 +67,17 @@ export const DEFAULT_TEAMS = [
 
 const STORAGE_KEY = 'fss18-picker-ball';
 
-// Sắp xếp theo loại cặp: Chủ lực+Tb1 thi đấu trên cùng một sân (Sân 1)
-// Rounds 0-5: pair1 Sân 1, pair2 Sân 2, pair3 Sân 3
-// Rounds 6-11: pair4 Sân 1, pair5 Sân 2 (Sân 3 trống)
-const PAIR_SCHEDULE = {
-  pair1: { court: 1, roundOffset: 0 },
-  pair2: { court: 2, roundOffset: 0 },
-  pair3: { court: 3, roundOffset: 0 },
-  pair4: { court: 1, roundOffset: 6 },
-  pair5: { court: 2, roundOffset: 6 },
-};
+// Sắp xếp: Chủ lực+Tb1 trên Sân 5. 10 vòng, cả 3 sân đều có trận mỗi vòng.
+// Rounds 0-5: pair1 Sân 5, pair2 Sân 6, pair3 Sân 7
+// Rounds 6-7: pair4 phân bổ Sân 5,6,7 | Rounds 8-9: pair5 phân bổ Sân 5,6,7
+function getGameSchedule(pairId, pairIdx) {
+  if (pairId === 'pair1') return { court: 1, round: pairIdx };
+  if (pairId === 'pair2') return { court: 2, round: pairIdx };
+  if (pairId === 'pair3') return { court: 3, round: pairIdx };
+  if (pairId === 'pair4') return { court: (pairIdx % 3) + 1, round: 6 + Math.floor(pairIdx / 3) };
+  if (pairId === 'pair5') return { court: (pairIdx % 3) + 1, round: 8 + Math.floor(pairIdx / 3) };
+  return { court: 1, round: 0 };
+}
 
 export function getTeamMatches(teams) {
   const matches = [];
@@ -86,8 +87,7 @@ export function getTeamMatches(teams) {
       const games = PAIR_TYPES.map((pair) => {
         const pairIdx = gamesByPair[pair.id];
         gamesByPair[pair.id]++;
-        const { court, roundOffset } = PAIR_SCHEDULE[pair.id];
-        const round = roundOffset + pairIdx;
+        const { court, round } = getGameSchedule(pair.id, pairIdx);
         return {
           pairId: pair.id,
           pairLabel: pair.label,
