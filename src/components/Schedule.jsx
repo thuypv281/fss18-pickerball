@@ -52,7 +52,7 @@ export default function Schedule({ teams, matches }) {
 
   return (
     <div className="schedule-view">
-      <h2>Lịch thi đấu</h2>
+      <h2>Kết quả thi đấu</h2>
       <p className="subtitle schedule-date">
         Dự kiến {getTomorrowDate()} từ 08:00 • Sân 5, 6, 7 • 11 vòng, mỗi vòng 15 phút thi đấu + 3 phút nghỉ (sân 5
         nghỉ 9–10h)

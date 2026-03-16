@@ -67,6 +67,40 @@ export const DEFAULT_TEAMS = [
 
 const STORAGE_KEY = 'fss18-picker-ball';
 
+// Tỷ số mặc định theo ảnh lịch thi đấu (key: "round-court" → [team1Score, team2Score])
+const DEFAULT_SCORES = {
+  '0-1': [15, 3],   // Vòng 1 Sân 5: Thùy vs Âu
+  '0-2': [8, 15],   // Vòng 1 Sân 6: Thùy vs Âu
+  '0-3': [15, 7],   // Vòng 1 Sân 7: Hồng Linh vs Cartherine
+  '1-1': [1, 15],   // Vòng 2 Sân 5: Thùy vs Âu
+  '1-2': [12, 15],  // Vòng 2 Sân 6: Thùy vs Âu
+  '1-3': [15, 8],   // Vòng 2 Sân 7: Hồng Linh vs Cartherine
+  '2-1': [15, 7],   // Vòng 3 Sân 5: Thùy vs Âu
+  '2-2': [15, 5],   // Vòng 3 Sân 6: Hồng Linh vs Cartherine
+  '2-3': [15, 8],   // Vòng 3 Sân 7: Hồng Linh vs Cartherine
+  '3-1': [15, 11],  // Vòng 4 Sân 5: Thùy vs Hồng Linh
+  '3-2': [15, 12],  // Vòng 4 Sân 6: Âu vs Cartherine
+  '3-3': [15, 10],  // Vòng 4 Sân 7: Hồng Linh vs Cartherine
+  '4-2': [15, 12],  // Vòng 5 Sân 6: Thùy vs Hồng Linh
+  '4-3': [5, 15],   // Vòng 5 Sân 7: Âu vs Cartherine
+  '5-2': [3, 15],   // Vòng 6 Sân 6: Thùy vs Hồng Linh
+  '5-3': [15, 7],   // Vòng 6 Sân 7: Âu vs Cartherine
+  '6-2': [12, 15],  // Vòng 7 Sân 6: Thùy vs Hồng Linh
+  '6-3': [15, 9],   // Vòng 7 Sân 7: Âu vs Cartherine
+  '7-1': [9, 15],   // Vòng 8 Sân 5: Thùy vs Hồng Linh
+  '7-2': [15, 10],  // Vòng 8 Sân 6: Thùy vs Cartherine
+  '7-3': [5, 15],   // Vòng 8 Sân 7: Âu vs Cartherine
+  '8-1': [15, 6],   // Vòng 9 Sân 5: Thùy vs Cartherine
+  '8-2': [15, 11],  // Vòng 9 Sân 6: Thùy vs Cartherine
+  '8-3': [9, 15],   // Vòng 9 Sân 7: Âu vs Hồng Linh
+  '9-1': [11, 15],  // Vòng 10 Sân 5: Thùy vs Cartherine
+  '9-2': [8, 15],   // Vòng 10 Sân 6: Âu vs Hồng Linh
+  '9-3': [17, 15],  // Vòng 10 Sân 7: Âu vs Hồng Linh
+  '10-1': [3, 15],  // Vòng 11 Sân 5: Thùy vs Cartherine
+  '10-2': [5, 15],  // Vòng 11 Sân 6: Âu vs Hồng Linh
+  '10-3': [7, 15],  // Vòng 11 Sân 7: Âu vs Hồng Linh
+};
+
 // Tăng version mỗi khi đổi cấu trúc lịch (số vòng, ràng buộc sân, ...) để bỏ qua data cũ trong localStorage
 const STATE_VERSION = 2;
 
@@ -311,9 +345,23 @@ export function getTeamMatches(teams) {
   }));
 }
 
+function applyDefaultScores(matches) {
+  matches.forEach((match) => {
+    match.games.forEach((game) => {
+      const key = `${game.round}-${game.court}`;
+      const scores = DEFAULT_SCORES[key];
+      if (scores && game.team1Score == null && game.team2Score == null) {
+        game.team1Score = scores[0];
+        game.team2Score = scores[1];
+      }
+    });
+  });
+}
+
 export function getInitialState() {
   const teams = DEFAULT_TEAMS;
   const matches = getTeamMatches(teams);
+  applyDefaultScores(matches);
   return {
     teams,
     matches,
@@ -359,6 +407,7 @@ export function loadState() {
         members: t.members || def.members,
       };
     });
+    applyDefaultScores(data.matches);
     return { teams: data.teams, matches: data.matches };
   } catch {
     return null;
@@ -425,7 +474,6 @@ export function calculateRankings(teams, matches) {
   });
 
   return Object.values(stats).sort((a, b) => {
-    if (b.matchWins !== a.matchWins) return b.matchWins - a.matchWins;
     if (b.setWins !== a.setWins) return b.setWins - a.setWins;
     const diffA = a.pointsFor - a.pointsAgainst;
     const diffB = b.pointsFor - b.pointsAgainst;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
 import {
   getInitialState,
   loadState,
@@ -7,8 +7,7 @@ import {
 } from './data/tournamentData';
 import Schedule from './components/Schedule';
 import Rankings from './components/Rankings';
-import Overview from './components/Overview';
-import Admin from './components/Admin';
+import Statistics from './components/Statistics';
 import './App.css';
 
 function App() {
@@ -28,39 +27,7 @@ function App() {
     }
   };
 
-  const handleUpdateScore = (matchId, gameIndex, team1Score, team2Score) => {
-    setState((prev) => {
-      const matches = prev.matches.map((m) => {
-        if (m.id !== matchId) return m;
-        const games = [...m.games];
-        games[gameIndex] = {
-          ...games[gameIndex],
-          team1Score,
-          team2Score,
-        };
-        return { ...m, games };
-      });
-      return { ...prev, matches };
-    });
-  };
-
-  const handleReset = () => {
-    setState(getInitialState());
-  };
-
-  const handleRenameTeam = (teamId, name) => {
-    setState((prev) => ({
-      ...prev,
-      teams: prev.teams.map((t) =>
-        t.id === teamId ? { ...t, name: name || t.name } : t
-      ),
-    }));
-  };
-
-  const [tab, setTab] = useState('schedule');
-  const location = useLocation();
-
-  const isAdmin = location.pathname === '/admin';
+  const [tab, setTab] = useState('rankings');
 
   return (
     <div className="app">
@@ -77,30 +44,24 @@ function App() {
           </button>
         </h1>
         <nav className="tabs">
-          {!isAdmin ? (
-            <>
-              <button
-                className={tab === 'schedule' ? 'active' : ''}
-                onClick={() => setTab('schedule')}
-              >
-                Lịch thi đấu
-              </button>
-              <button
-                className={tab === 'rankings' ? 'active' : ''}
-                onClick={() => setTab('rankings')}
-              >
-                Bảng xếp hạng
-              </button>
-              <button
-                className={tab === 'overview' ? 'active' : ''}
-                onClick={() => setTab('overview')}
-              >
-                Thông tin & giờ đấu
-              </button>
-            </>
-          ) : (
-            <Link to="/" className="tab-link">← Về trang chủ</Link>
-          )}
+          <button
+            className={tab === 'rankings' ? 'active' : ''}
+            onClick={() => setTab('rankings')}
+          >
+            Bảng xếp hạng
+          </button>
+          <button
+            className={tab === 'stats' ? 'active' : ''}
+            onClick={() => setTab('stats')}
+          >
+            Thống kê
+          </button>
+          <button
+            className={tab === 'schedule' ? 'active' : ''}
+            onClick={() => setTab('schedule')}
+          >
+            Kết quả thi đấu
+          </button>
         </nav>
       </header>
 
@@ -110,9 +71,6 @@ function App() {
             path="/"
             element={
               <>
-                {tab === 'schedule' && (
-                  <Schedule teams={state.teams} matches={state.matches} />
-                )}
                 {tab === 'rankings' && (
                   <Rankings
                     teams={state.teams}
@@ -120,22 +78,13 @@ function App() {
                     onRefresh={handleRefreshFromStorage}
                   />
                 )}
-                {tab === 'overview' && (
-                  <Overview teams={state.teams} matches={state.matches} />
+                {tab === 'stats' && (
+                  <Statistics teams={state.teams} matches={state.matches} />
+                )}
+                {tab === 'schedule' && (
+                  <Schedule teams={state.teams} matches={state.matches} />
                 )}
               </>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <Admin
-                teams={state.teams}
-                matches={state.matches}
-                onUpdateScore={handleUpdateScore}
-                onReset={handleReset}
-                onRenameTeam={handleRenameTeam}
-              />
             }
           />
         </Routes>

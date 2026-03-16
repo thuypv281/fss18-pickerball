@@ -20,8 +20,6 @@ export default function Rankings({ teams, matches }) {
             <tr>
               <th>Hạng</th>
               <th>Team</th>
-              <th>Thắng</th>
-              <th>Thua</th>
               <th>Set thắng</th>
               <th>Set thua</th>
               <th>Điểm ghi</th>
@@ -38,8 +36,6 @@ export default function Rankings({ teams, matches }) {
                   {rankIcon ? <span className="rank-icon">{rankIcon}</span> : i + 1}
                 </td>
                 <td className="team-name"><span className={TEAM_COLORS[r.teamId] || 'team-color-1'}>{r.teamName}</span></td>
-                <td>{r.matchWins}</td>
-                <td>{r.matchLosses}</td>
                 <td>{r.setWins}</td>
                 <td>{r.setLosses}</td>
                 <td>{r.pointsFor}</td>
@@ -56,7 +52,7 @@ export default function Rankings({ teams, matches }) {
       </div>
 
       <div className="legend">
-        <p>Xếp hạng: Thắng trận → Set thắng → Hiệu số điểm</p>
+        <p>Xếp hạng theo Set thắng, cùng set thì xét Hiệu số điểm</p>
       </div>
     </div>
   );
